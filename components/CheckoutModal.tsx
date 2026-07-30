@@ -13,7 +13,7 @@ interface CheckoutModalProps {
   onSuccess: () => void;
 }
 
-type PayTab = PaymentMethod;
+type PayTab = Exclude<PaymentMethod, "cash">;
 
 export function CheckoutModal({
   open,
@@ -69,7 +69,7 @@ export function CheckoutModal({
         return;
       }
 
-      if (paymentMethod === "transfer" || paymentMethod === "cash") {
+      if (paymentMethod === "transfer") {
         clearCart();
         onClose();
         onSuccess();
@@ -191,12 +191,6 @@ export function CheckoutModal({
               >
                 🏦 Transferencia
               </button>
-              <button
-                className={`pay-tab${tab === "cash" ? " active" : ""}`}
-                onClick={() => setTab("cash")}
-              >
-                💵 Efectivo
-              </button>
             </div>
 
             <div
@@ -218,7 +212,8 @@ export function CheckoutModal({
                 disabled={loading}
                 onClick={() => submit("mercadopago")}
               >
-                <span style={{ fontSize: 20 }}>📱</span> Pagar con Mercado Pago
+                <span style={{ fontSize: 20 }}>📱</span>{" "}
+                {loading ? "Conectando con Mercado Pago…" : "Pagar con Mercado Pago"}
               </button>
               <div className="secure-badge">🔒 Protegido por Mercado Pago</div>
             </div>
@@ -244,25 +239,6 @@ export function CheckoutModal({
               </button>
             </div>
 
-            <div className={`pay-panel${tab === "cash" ? " active" : ""}`}>
-              <div className="transferencia-info">
-                <strong>Pago en persona:</strong>
-                Podés abonar en efectivo al retirar tu pedido en Montevideo o
-                contra entrega según disponibilidad.
-                {"\n\n"}
-                <strong>Coordinar retiro:</strong>
-                Escribinos por Instagram{" "}
-                <strong>{settings.instagram_handle}</strong> para acordar lugar
-                y horario.
-              </div>
-              <button
-                className="pay-btn"
-                disabled={loading}
-                onClick={() => submit("cash")}
-              >
-                Confirmar pedido — pago en persona
-              </button>
-            </div>
           </div>
         </div>
       </div>

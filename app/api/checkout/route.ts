@@ -37,6 +37,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Carrito vacío" }, { status: 400 });
     }
 
+    if (!["mercadopago", "transfer"].includes(payment_method)) {
+      return NextResponse.json(
+        { error: "Método de pago no disponible" },
+        { status: 400 }
+      );
+    }
+
     const settings = await getSettings();
     const { order, total, orderItems, shipping_cost } = await createOrder({
       customer_name: customer_name.trim(),
@@ -75,14 +82,11 @@ export async function POST(request: Request) {
       });
     }
 
-    const paymentLabel =
-      payment_method === "transfer" ? "transferencia" : "efectivo";
-
     const whatsappUrl = getWhatsAppUrlForOrder(settings, {
       items: orderItems,
       total,
       customerName: customer_name.trim(),
-      paymentLabel,
+      paymentLabel: "transferencia",
     });
 
     return NextResponse.json({
