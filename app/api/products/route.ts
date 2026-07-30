@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET() {
@@ -58,5 +59,6 @@ export async function POST(request: Request) {
     await supabase.from("product_stock").insert(stockRows);
   }
 
+  revalidatePath("/");
   return NextResponse.json({ product });
 }

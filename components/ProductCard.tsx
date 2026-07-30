@@ -44,14 +44,17 @@ export function ProductCard({
 
   return (
     <div className="card">
-      <Link href={`/producto/${product.id}`} className="card-link">
+      <Link
+        href={`/producto/${product.id}`}
+        className="card-link"
+        prefetch
+      >
         <div className="card-img">
           <Image
             src={product.image_url}
             alt={product.name}
             width={400}
             height={533}
-            unoptimized
           />
           {product.badge && <div className="card-badge">{product.badge}</div>}
         </div>

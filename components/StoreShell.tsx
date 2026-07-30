@@ -12,6 +12,7 @@ interface StoreShellProps {
   settings: Settings;
   children: React.ReactNode;
   activeCategory?: string;
+  onCategoryChange?: (slug: string) => void;
 }
 
 export function StoreShell({
@@ -19,6 +20,7 @@ export function StoreShell({
   settings,
   children,
   activeCategory,
+  onCategoryChange,
 }: StoreShellProps) {
   const { count } = useCart();
   const [cartOpen, setCartOpen] = useState(false);
@@ -57,15 +59,25 @@ export function StoreShell({
           </div>
         </div>
         <div className="cat-nav">
-          {navCategories.map((cat) => (
-            <Link
-              key={cat.slug}
-              href={cat.slug === "todos" ? "/" : `/?cat=${cat.slug}`}
-              className={activeCategory === cat.slug ? "active" : ""}
-            >
-              {cat.name}
-            </Link>
-          ))}
+          {navCategories.map((cat) =>
+            onCategoryChange ? (
+              <button
+                key={cat.slug}
+                className={activeCategory === cat.slug ? "active" : ""}
+                onClick={() => onCategoryChange(cat.slug)}
+              >
+                {cat.name}
+              </button>
+            ) : (
+              <Link
+                key={cat.slug}
+                href={cat.slug === "todos" ? "/" : `/?cat=${cat.slug}`}
+                className={activeCategory === cat.slug ? "active" : ""}
+              >
+                {cat.name}
+              </Link>
+            )
+          )}
         </div>
       </nav>
 

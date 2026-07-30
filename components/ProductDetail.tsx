@@ -82,7 +82,6 @@ export function ProductDetail({
                 width={600}
                 height={800}
                 priority
-                unoptimized
               />
               {product.badge && (
                 <div className="card-badge">{product.badge}</div>

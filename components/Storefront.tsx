@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Category, Product, Settings } from "@/lib/types";
 import { ProductCard } from "@/components/ProductCard";
 import { StoreShell } from "@/components/StoreShell";
@@ -19,11 +19,24 @@ export function Storefront({
   initialCategory = "todos",
 }: StorefrontProps) {
   const [toast, setToast] = useState("");
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
 
   const filtered = useMemo(() => {
-    if (initialCategory === "todos") return products;
-    return products.filter((p) => p.category_slug === initialCategory);
-  }, [products, initialCategory]);
+    if (activeCategory === "todos") return products;
+    return products.filter((p) => p.category_slug === activeCategory);
+  }, [products, activeCategory]);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const slug = new URLSearchParams(window.location.search).get("cat");
+      const isValid = categories.some((category) => category.slug === slug);
+      setActiveCategory(slug && isValid ? slug : "todos");
+    };
+
+    handlePopState();
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [categories]);
 
   function showToast(msg: string) {
     setToast(msg);
@@ -34,11 +47,18 @@ export function Storefront({
     document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
   }
 
+  function changeCategory(slug: string) {
+    setActiveCategory(slug);
+    const url = slug === "todos" ? "/" : `/?cat=${slug}`;
+    window.history.pushState(null, "", url);
+  }
+
   return (
     <StoreShell
       categories={categories}
       settings={settings}
-      activeCategory={initialCategory}
+      activeCategory={activeCategory}
+      onCategoryChange={changeCategory}
     >
       <div className="hero">
         <div>

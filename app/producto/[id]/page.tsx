@@ -10,7 +10,7 @@ import {
   getSettings,
 } from "@/lib/db";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ id: string }>;

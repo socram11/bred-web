@@ -1,5 +1,8 @@
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import {
   DEFAULT_SETTINGS,
   getLocalSeedCategories,
@@ -17,10 +20,10 @@ function hasSupabase() {
   );
 }
 
-export async function getCategories(): Promise<Category[]> {
+async function fetchCategories(): Promise<Category[]> {
   if (!hasSupabase()) return getLocalSeedCategories();
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("categories")
     .select("*")
@@ -29,6 +32,12 @@ export async function getCategories(): Promise<Category[]> {
   if (error || !data?.length) return getLocalSeedCategories();
   return data;
 }
+
+export const getCategories = unstable_cache(
+  fetchCategories,
+  ["store-categories"],
+  { revalidate: 60 }
+);
 
 function mapProductRow(p: {
   id: string;
@@ -67,10 +76,10 @@ function mapProductRow(p: {
   };
 }
 
-export async function getProducts(): Promise<Product[]> {
+async function fetchProducts(): Promise<Product[]> {
   if (!hasSupabase()) return getLocalSeedProducts();
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data: products, error } = await supabase
     .from("products")
     .select("*, categories(slug), product_stock(size, quantity)")
@@ -82,12 +91,16 @@ export async function getProducts(): Promise<Product[]> {
   return products.map(mapProductRow);
 }
 
-export async function getProductById(id: string): Promise<Product | null> {
+export const getProducts = unstable_cache(fetchProducts, ["store-products"], {
+  revalidate: 60,
+});
+
+async function findProductById(id: string): Promise<Product | null> {
   if (!hasSupabase()) {
     return getLocalSeedProducts().find((p) => p.id === id) || null;
   }
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase
     .from("products")
     .select("*, categories(slug), product_stock(size, quantity)")
@@ -101,6 +114,14 @@ export async function getProductById(id: string): Promise<Product | null> {
 
   return mapProductRow(data);
 }
+
+const getCachedProductById = unstable_cache(
+  findProductById,
+  ["store-product"],
+  { revalidate: 60 }
+);
+
+export const getProductById = cache(getCachedProductById);
 
 export function getRelatedProducts(
   product: Product,
@@ -116,10 +137,10 @@ export function getRelatedProducts(
     .slice(0, limit);
 }
 
-export async function getSettings(): Promise<Settings> {
+async function fetchSettings(): Promise<Settings> {
   if (!hasSupabase()) return DEFAULT_SETTINGS;
 
-  const supabase = await createClient();
+  const supabase = createPublicClient();
   const { data, error } = await supabase.from("settings").select("*").eq("id", 1).single();
 
   if (error || !data) return DEFAULT_SETTINGS;
@@ -133,10 +154,14 @@ export async function getSettings(): Promise<Settings> {
   };
 }
 
+export const getSettings = unstable_cache(fetchSettings, ["store-settings"], {
+  revalidate: 60,
+});
+
 export async function getAllProductsAdmin(): Promise<Product[]> {
   if (!hasSupabase()) return getLocalSeedProducts();
 
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data, error } = await supabase
     .from("products")
     .select("*, categories(slug), product_stock(size, quantity)")
