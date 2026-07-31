@@ -19,6 +19,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Archivo requerido" }, { status: 400 });
   }
 
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    return NextResponse.json(
+      { error: "Formato no permitido. Usá JPG, PNG o WebP" },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > 4 * 1024 * 1024) {
+    return NextResponse.json(
+      { error: "La imagen no puede superar los 4 MB" },
+      { status: 400 }
+    );
+  }
+
   const ext = file.name.split(".").pop() || "jpg";
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const admin = createAdminClient();

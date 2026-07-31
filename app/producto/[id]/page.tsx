@@ -4,7 +4,6 @@ import { CartProvider } from "@/components/CartProvider";
 import { ProductDetail } from "@/components/ProductDetail";
 import {
   getCategories,
-  getProductById,
   getProducts,
   getRelatedProducts,
   getSettings,
@@ -16,11 +15,17 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+export async function generateStaticParams() {
+  const products = await getProducts();
+  return products.map((product) => ({ id: product.id }));
+}
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProductById(id);
+  const products = await getProducts();
+  const product = products.find((item) => item.id === id);
   if (!product) return { title: "Producto no encontrado — BRED" };
 
   return {
@@ -31,12 +36,12 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: PageProps) {
   const { id } = await params;
-  const [product, categories, settings, allProducts] = await Promise.all([
-    getProductById(id),
+  const [allProducts, categories, settings] = await Promise.all([
+    getProducts(),
     getCategories(),
     getSettings(),
-    getProducts(),
   ]);
+  const product = allProducts.find((item) => item.id === id);
 
   if (!product) notFound();
 

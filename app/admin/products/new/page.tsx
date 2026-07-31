@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ProductImageUpload } from "@/components/admin/ProductImageUpload";
 
 interface Category {
   id: string;
@@ -14,6 +15,7 @@ export default function NewProductPage() {
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
@@ -43,6 +45,12 @@ export default function NewProductPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if (!form.image_url) {
+      setError("Subí una imagen para el producto");
+      setLoading(false);
+      return;
+    }
 
     const sizes = form.sizes.split(",").map((s) => s.trim()).filter(Boolean);
     const stockValues = form.stock.split(",").map((s) => parseInt(s.trim(), 10));
@@ -157,24 +165,29 @@ export default function NewProductPage() {
               required
             />
           </div>
-          <div className="field">
-            <label>URL de imagen</label>
-            <input
-              value={form.image_url}
-              onChange={(e) =>
-                setForm({ ...form, image_url: e.target.value })
-              }
-              placeholder="/products/ejemplo.jpg"
-              required
-            />
-          </div>
+          <ProductImageUpload
+            value={form.image_url}
+            onChange={(imageUrl) =>
+              setForm((current) => ({ ...current, image_url: imageUrl }))
+            }
+            onUploadingChange={setUploading}
+            required
+          />
           {error && (
             <p style={{ color: "#c00", fontSize: 12, marginBottom: 12 }}>
               {error}
             </p>
           )}
-          <button className="pay-btn" type="submit" disabled={loading}>
-            {loading ? "Guardando..." : "Crear producto"}
+          <button
+            className="pay-btn"
+            type="submit"
+            disabled={loading || uploading || !form.image_url}
+          >
+            {uploading
+              ? "Subiendo imagen..."
+              : loading
+                ? "Guardando..."
+                : "Crear producto"}
           </button>
           <Link
             href="/admin/products"

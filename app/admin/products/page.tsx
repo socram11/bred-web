@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getAllProductsAdmin } from "@/lib/db";
 import { formatUYU } from "@/lib/mercadopago";
+import { DeleteProductButton } from "@/components/admin/DeleteProductButton";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +69,13 @@ export default async function AdminProductsPage() {
                   </span>
                 </td>
                 <td>
-                  <Link href={`/admin/products/${product.id}`}>Editar</Link>
+                  <div className="admin-row-actions">
+                    <Link href={`/admin/products/${product.id}`}>Editar</Link>
+                    <DeleteProductButton
+                      productId={product.id}
+                      productName={product.name}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

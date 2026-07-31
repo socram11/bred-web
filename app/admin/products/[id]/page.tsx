@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
+import { ProductImageUpload } from "@/components/admin/ProductImageUpload";
 
 interface Category {
   id: string;
@@ -22,6 +22,7 @@ export default function EditProductPage() {
   const id = params.id as string;
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
     name: "",
@@ -62,6 +63,12 @@ export default function EditProductPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
+    if (!form.image_url) {
+      setError("Subí una imagen para el producto");
+      setLoading(false);
+      return;
+    }
 
     const sizes = form.sizes.split(",").map((s) => s.trim()).filter(Boolean);
 
@@ -105,16 +112,6 @@ export default function EditProductPage() {
     <div className="admin-wrap">
       <h1 className="admin-h1">Editar producto</h1>
       <div className="admin-card" style={{ maxWidth: 560 }}>
-        {form.image_url && (
-          <Image
-            src={form.image_url}
-            alt={form.name}
-            width={120}
-            height={150}
-            unoptimized
-            style={{ objectFit: "cover", marginBottom: 16 }}
-          />
-        )}
         <form onSubmit={handleSubmit}>
           <div className="field">
             <label>Nombre</label>
@@ -177,16 +174,14 @@ export default function EditProductPage() {
               required
             />
           </div>
-          <div className="field">
-            <label>URL de imagen</label>
-            <input
-              value={form.image_url}
-              onChange={(e) =>
-                setForm({ ...form, image_url: e.target.value })
-              }
-              required
-            />
-          </div>
+          <ProductImageUpload
+            value={form.image_url}
+            onChange={(imageUrl) =>
+              setForm((current) => ({ ...current, image_url: imageUrl }))
+            }
+            onUploadingChange={setUploading}
+            required
+          />
           <div className="field">
             <label>
               <input
@@ -222,8 +217,16 @@ export default function EditProductPage() {
               {error}
             </p>
           )}
-          <button className="pay-btn" type="submit" disabled={loading}>
-            {loading ? "Guardando..." : "Guardar cambios"}
+          <button
+            className="pay-btn"
+            type="submit"
+            disabled={loading || uploading || !form.image_url}
+          >
+            {uploading
+              ? "Subiendo imagen..."
+              : loading
+                ? "Guardando..."
+                : "Guardar cambios"}
           </button>
           <Link
             href="/admin/products"
